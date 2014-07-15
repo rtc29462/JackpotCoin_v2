@@ -102,6 +102,7 @@ public:
         
         if (!Write(std::make_pair(std::string("ckey"), vchPubKey.Raw()), vchCryptedSecret, false))
             return false;
+
         if (fEraseUnencryptedKey)
         {
             Erase(std::make_pair(std::string("key"), vchPubKey.Raw()));

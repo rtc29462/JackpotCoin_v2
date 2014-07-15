@@ -154,19 +154,15 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
 
     if (!(GetBoolArg("-nostake", false)))
     {
-    // Set minting pixmap
-    labelMintingIcon->setPixmap(QIcon(":/icons/minting").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
-    labelMintingIcon->setEnabled(false);
-    // Add timer to update minting icon
-    QTimer *timerMintingIcon = new QTimer(labelMintingIcon);
-    timerMintingIcon->start(MODEL_UPDATE_DELAY);
-    connect(timerMintingIcon, SIGNAL(timeout()), this, SLOT(updateMintingIcon()));
-    // Add timer to update minting weights
-    QTimer *timerMintingWeights = new QTimer(labelMintingIcon);
-    timerMintingWeights->start(30 * 1000);
-    connect(timerMintingWeights, SIGNAL(timeout()), this, SLOT(updateMintingWeights()));
-    // Set initial values for user and network weights
-    nWeight, nNetworkWeight = 0;
+        QTimer *timerMintingIcon = new QTimer(labelMintingIcon);
+        connect(timerMintingIcon, SIGNAL(timeout()), this, SLOT(updateMintingIcon()));
+        timerMintingIcon->start(10 * 1000);
+        updateMintingIcon();
+        // Add timer to update minting weights
+        QTimer *timerMintingWeights = new QTimer(labelMintingIcon);
+        timerMintingWeights->start(10 * 1000);
+        connect(timerMintingWeights, SIGNAL(timeout()), this, SLOT(updateMintingWeights()));
+        nWeight, nNetworkWeight = 0;
     }
 
     // Progress bar and label for blocks download
@@ -833,7 +829,7 @@ void BitcoinGUI::setEncryptionStatus(int status)
     case WalletModel::Unlocked:
         labelEncryptionIcon->show();
         labelEncryptionIcon->setPixmap(QIcon(":/icons/lock_open").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
-        if ( fWalletUnlockMintOnly) 
+        if (fWalletUnlockMintOnly) 
            labelEncryptionIcon->setToolTip(tr("Wallet is <b>encrypted</b> and currently <b>unlocked for minting</b>."));
         else 
            labelEncryptionIcon->setToolTip(tr("Wallet is <b>encrypted</b> and currently <b>unlocked</b>."));
@@ -980,11 +976,13 @@ void BitcoinGUI::updateMintingIcon()
         }
 
         labelMintingIcon->setPixmap(QIcon(":/icons/minting_active").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
-        labelMintingIcon->setToolTip(tr("Staking.<br>Your weight is %1<br>Network weight is %2<br>Expected time to earn reward is %3").arg(nWeight).arg(nNetworkWeight).arg(text));
+        labelMintingIcon->setEnabled(true);
+        labelMintingIcon->setToolTip(tr("Minting.<br>Your weight is %1<br>Network weight is %2<br>Expected time to earn reward is %3").arg(nWeight).arg(nNetworkWeight).arg(text));
     }
     else
     {
         labelMintingIcon->setPixmap(QIcon(":/icons/minting_inactive").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
+        labelMintingIcon->setEnabled(false);
         if (pwalletMain && pwalletMain->IsLocked())
             labelMintingIcon->setToolTip(tr("Not minting because wallet is locked"));
         else if (vNodes.empty())

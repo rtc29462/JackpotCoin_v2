@@ -78,9 +78,6 @@ extern uint64_t nLastBlockTx;
 extern uint64_t nLastBlockSize;
 extern int64_t nLastCoinStakeSearchInterval;
 extern const std::string strMessageMagic;
-
-extern double dHashesPerSec;
-extern int64_t nHPSTimerStart;
 extern int64_t nTimeBestReceived;
 extern CCriticalSection cs_setpwalletRegistered;
 extern std::set<CWallet*> setpwalletRegistered;
@@ -116,7 +113,7 @@ CBlockIndex* FindBlockByHeight(int nHeight);
 bool ProcessMessages(CNode* pfrom);
 bool SendMessages(CNode* pto, bool fSendTrickle);
 bool LoadExternalBlockFile(FILE* fileIn);
-void GenerateBitcoins(bool fGenerate, CWallet* pwallet);
+
 CBlock* CreateNewBlock(CWallet* pwallet, bool fProofOfStake=false, int64_t* pFees = 0);
 void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& nExtraNonce);
 void FormatHashBuffers(CBlock* pblock, char* pdata);
@@ -140,7 +137,7 @@ int CountPowDelta(CBlockIndex* pindex, int superBlock);
 int GetPowHeight(const CBlockIndex* pindex);
 int GetPosHeight(const CBlockIndex* pindex);
 int GetSpecialHeight(const CBlockIndex* pindex, bool fProofOfStake);
-void BitcoinMiner(CWallet *pwallet, bool fProofOfStake);
+void BitcoinMiner(CWallet *pwallet);
 void ResendWalletTransactions(bool fForce = false);
 int64_t GetCurrentJackpotSize(const CBlockIndex* pindex);
 
