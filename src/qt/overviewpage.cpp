@@ -16,7 +16,10 @@
 #define DECORATION_SIZE 64
 #define NUM_ITEMS 8
 
+bool fHideInvalidTransactions;
+
 extern int nJackpotValue; 
+extern bool fWalletUnlockMintOnly;
 
 class TxViewDelegate : public QAbstractItemDelegate
 {
@@ -90,6 +93,7 @@ public:
     int unit;
 
 };
+
 #include "overviewpage.moc"
 
 OverviewPage::OverviewPage(QWidget *parent) :
@@ -161,26 +165,6 @@ void OverviewPage::setNumTransactions(int count)
     ui->labelNumTransactions->setText(QLocale::system().toString(count));
 }
 
-void OverviewPage::unlockWallet()
-{
-    if(model->getEncryptionStatus() == WalletModel::Locked)
-    {
-        AskPassphraseDialog dlg(AskPassphraseDialog::Unlock, this);
-        dlg.setModel(model);
-        if(dlg.exec() == QDialog::Accepted)
-        {
-            ui->unlockWalletButton->setText(QString("Lock wallet"));
-        }
-    }
-    else
-    {
-        model->setWalletLocked(true);
-        ui->unlockWalletButton->setText(QString("Unlock wallet"));
-    }
-}
-
-
-
 void OverviewPage::setModel(WalletModel *model)
 {
     this->model = model;
@@ -192,8 +176,8 @@ void OverviewPage::setModel(WalletModel *model)
         filter->setLimit(NUM_ITEMS);
         filter->setDynamicSortFilter(true);
         filter->setSortRole(Qt::EditRole);
-        filter->setShowInactive(false);
         filter->sort(TransactionTableModel::Date, Qt::DescendingOrder);
+        filter->setHideInvalid(model->getOptionsModel()->getHideInvalid());
 
         ui->listTransactions->setModel(filter);
         ui->listTransactions->setModelColumn(TransactionTableModel::ToAddress);
@@ -212,15 +196,31 @@ void OverviewPage::setModel(WalletModel *model)
 
         // Unlock wallet button
         WalletModel::EncryptionStatus status = model->getEncryptionStatus();
-        if(status == WalletModel::Unencrypted)
-        {
-            ui->unlockWalletButton->setDisabled(true);
-        }
-        connect(ui->unlockWalletButton, SIGNAL(clicked()), this, SLOT(unlockWallet()));    
-    }
 
+    }
     // update the display unit, to not use the default
     updateDisplayUnit();
+}
+
+void OverviewPage::updateTransactions()
+{
+    if(model && model->getOptionsModel())
+    {
+        // Set up transaction list
+        filter = new TransactionFilterProxy();
+        filter->setSourceModel(model->getTransactionTableModel());
+        filter->setLimit(NUM_ITEMS);
+        filter->setDynamicSortFilter(true);
+        filter->setSortRole(Qt::EditRole);
+        filter->sort(TransactionTableModel::Date, Qt::DescendingOrder);
+        filter->setHideInvalid(model->getOptionsModel()->getHideInvalid());
+
+        ui->listTransactions->setModel(filter);
+        ui->listTransactions->setModelColumn(TransactionTableModel::ToAddress);
+        ui->listTransactions->update();
+
+    }
+
 }
 
 void OverviewPage::updateDisplayUnit()

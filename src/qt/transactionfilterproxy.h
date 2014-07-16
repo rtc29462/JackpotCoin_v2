@@ -27,13 +27,12 @@ public:
      */
     void setTypeFilter(quint32 modes);
     void setMinAmount(qint64 minimum);
-    void setMinConfirm(qint64 minimum);
+
+    /** hide invalid transaction record */
+    void setHideInvalid(bool hideInvalid);
 
     /** Set maximum number of rows returned, -1 if unlimited. */
     void setLimit(int limit);
-
-    /** Set whether to show conflicted transactions. */
-    void setShowInactive(bool showInactive);
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
 protected:
@@ -45,9 +44,8 @@ private:
     QString addrPrefix;
     quint32 typeFilter;
     qint64 minAmount;
-    qint64 minConfirm;
     int limitRows;
-    bool showInactive;
+    bool hideInvalid;
 
 signals:
 

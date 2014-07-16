@@ -17,23 +17,24 @@ public:
     explicit OptionsModel(QObject *parent = 0);
 
     enum OptionID {
-        StartAtStartup,    // bool
-        MinimizeToTray,    // bool
-        MapPortUPnP,       // bool
-        MinimizeOnClose,   // bool
-        ProxyUse,          // bool
-        ProxyIP,           // QString
-        ProxyPort,         // int
-        ProxySocksVersion, // int
-        Fee,               // qint64
-        ReserveBalance,    // qint64
-        DisplayUnit,       // BitcoinUnits::Unit
-        DisplayAddresses,  // bool
-        DetachDatabases,   // bool
-        Language,          // QString
+        StartAtStartup,      // bool
+        MinimizeToTray,      // bool
+        MapPortUPnP,         // bool
+        MinimizeOnClose,     // bool
+        ProxyUse,            // bool
+        ProxyIP,             // QString
+        ProxyPort,           // int
+        ProxySocksVersion,   // int
+        Fee,                 // qint64
+        ReserveBalance,      // qint64
+        DisplayUnit,         // BitcoinUnits::Unit
+        DisplayAddresses,    // bool
+        DetachDatabases,     // bool
+        Language,            // QString
         CoinControlFeatures, // bool
-        OptionIDRowCount,   // Bool
-        Notification,       // Bool
+        HideNotification,    // Bool
+        HideInvalid,         // Bool
+        OptionIDRowCount,    // Used to define the number of options, should be end of enum.
     };
 
     void Init();
@@ -50,19 +51,21 @@ public:
     qint64 getReserveBalance();
     bool getMinimizeToTray();
     bool getMinimizeOnClose();
-    int getDisplayUnit();
+    int  getDisplayUnit();
     bool getDisplayAddresses();
     bool getCoinControlFeatures();
-    bool getNotification(); 
+    bool getHideNotification();
+    bool getHideInvalid();
     QString getLanguage() { return language; }
 
 private:
-    int nDisplayUnit;
-    bool bDisplayAddresses;
+    int  nDisplayUnit;
+    bool fDisplayAddresses;
     bool fMinimizeToTray;
     bool fMinimizeOnClose;
     bool fCoinControlFeatures;
-    bool fNotification;
+    bool fHideNotification;
+    bool fHideInvalid;
     QString language;
 
 signals:
@@ -70,6 +73,7 @@ signals:
     void transactionFeeChanged(qint64);
     void reserveBalanceChanged(qint64);
     void coinControlFeaturesChanged(bool);
+
 };
 
 #endif // OPTIONSMODEL_H

@@ -438,3 +438,10 @@ void TransactionView::focusTransaction(const QModelIndex &idx)
     transactionView->setCurrentIndex(targetIdx);
     transactionView->setFocus();
 }
+
+void TransactionView::updateTransactionList(bool hideInvalid) {
+    if (transactionProxyModel)
+    {
+       transactionProxyModel->setHideInvalid(hideInvalid);
+    }
+}

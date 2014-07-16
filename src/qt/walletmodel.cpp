@@ -274,7 +274,7 @@ WalletModel::EncryptionStatus WalletModel::getEncryptionStatus() const
 
 bool WalletModel::setWalletEncrypted(bool encrypted, const SecureString &passphrase)
 {
-    if(encrypted)
+    if (encrypted)
     {
         // Encrypt
         return wallet->EncryptWallet(passphrase);

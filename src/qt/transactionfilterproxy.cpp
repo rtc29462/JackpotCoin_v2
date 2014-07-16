@@ -6,6 +6,8 @@
 
 #include <cstdlib>
 
+extern bool fHideInvalidTransactions;
+
 // Earliest date that can be represented (far in the past)
 const QDateTime TransactionFilterProxy::MIN_DATE = QDateTime::fromTime_t(0);
 // Last date that can be represented (far in the future)
@@ -18,9 +20,8 @@ TransactionFilterProxy::TransactionFilterProxy(QObject *parent) :
     addrPrefix(),
     typeFilter(ALL_TYPES),
     minAmount(0),
-    minConfirm(1),
     limitRows(-1),
-    showInactive(true)
+    hideInvalid(true)
 {
 }
 
@@ -33,13 +34,12 @@ bool TransactionFilterProxy::filterAcceptsRow(int sourceRow, const QModelIndex &
     QString address = index.data(TransactionTableModel::AddressRole).toString();
     QString label = index.data(TransactionTableModel::LabelRole).toString();
     qint64 amount = llabs(index.data(TransactionTableModel::AmountRole).toLongLong());
-    qint64 confirms = index.data(TransactionTableModel::ConfirmedDepth).toLongLong();
     int status = index.data(TransactionTableModel::StatusRole).toInt();
 
-    if(!showInactive && (status == TransactionStatus::Conflicted || status == TransactionStatus::NotAccepted))
-        return false;
-    if (confirms < minConfirm)
-        return false;
+    if (hideInvalid) {
+       if (status == TransactionStatus::Conflicted || status == TransactionStatus::NotAccepted)
+          return false;
+    }
     if(!(TYPE(type) & typeFilter))
         return false;
     if(datetime < dateFrom || datetime > dateTo)
@@ -71,12 +71,6 @@ void TransactionFilterProxy::setTypeFilter(quint32 modes)
     invalidateFilter();
 }
 
-void TransactionFilterProxy::setMinConfirm(qint64 minimum)
-{
-    this->minConfirm = minimum;
-    invalidateFilter();
-}
-
 void TransactionFilterProxy::setMinAmount(qint64 minimum)
 {
     this->minAmount = minimum;
@@ -88,9 +82,9 @@ void TransactionFilterProxy::setLimit(int limit)
     this->limitRows = limit;
 }
 
-void TransactionFilterProxy::setShowInactive(bool showInactive)
+void TransactionFilterProxy::setHideInvalid(bool hideInvalid)
 {
-    this->showInactive = showInactive;
+    this->hideInvalid = hideInvalid;
     invalidateFilter();
 }
 

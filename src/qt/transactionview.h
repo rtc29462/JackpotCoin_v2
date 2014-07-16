@@ -77,6 +77,7 @@ public slots:
     void changedAmount(const QString &amount);
     void exportClicked();
     void focusTransaction(const QModelIndex&);
+    void updateTransactionList(bool hideInvalid);
 
 };
 

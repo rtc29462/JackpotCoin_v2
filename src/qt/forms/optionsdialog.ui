@@ -23,7 +23,7 @@
       <enum>QTabWidget::North</enum>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>3</number>
      </property>
      <widget class="QWidget" name="tabMain">
       <attribute name="title">
@@ -400,9 +400,22 @@
         </widget>
        </item>
        <item>
-        <widget class="QCheckBox" name="notification">
+        <widget class="QCheckBox" name="hideNotification">
+         <property name="toolTip">
+          <string>Do not show a notification on the system tray</string>
+         </property>
          <property name="text">
-          <string>Enable Notification</string>
+          <string>Disable system tray &amp;notification</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="hideInvalid">
+         <property name="toolTip">
+          <string>Hide invalid transaction record(s) from the transaction list</string>
+         </property>
+         <property name="text">
+          <string>Hide &amp;unconfirmed transaction record(s)</string>
          </property>
         </widget>
        </item>

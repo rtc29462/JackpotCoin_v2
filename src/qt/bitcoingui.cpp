@@ -483,6 +483,12 @@ void BitcoinGUI::optionsClicked()
     OptionsDialog dlg;
     dlg.setModel(clientModel->getOptionsModel());
     dlg.exec();
+
+    //
+    // update list for hideInvalid
+    //
+    transactionView->updateTransactionList(clientModel->getOptionsModel()->getHideInvalid());
+
 }
 
 void BitcoinGUI::aboutClicked()
@@ -620,8 +626,13 @@ void BitcoinGUI::error(const QString &title, const QString &message, bool modal)
     if(modal)
     {
         QMessageBox::critical(this, title, message, QMessageBox::Ok, QMessageBox::Ok);
-    } else {
-        notificator->notify(Notificator::Critical, title, message);
+    }
+    else
+    {
+        if (!clientModel->getOptionsModel()->getHideNotification())
+        {
+            notificator->notify(Notificator::Critical, title, message);
+        }
     }
 }
 
@@ -679,7 +690,7 @@ void BitcoinGUI::incomingTransaction(const QModelIndex & parent, int start, int 
     TransactionTableModel *ttm = walletModel->getTransactionTableModel();
     qint64 amount = ttm->index(start, TransactionTableModel::Amount, parent)
                     .data(Qt::EditRole).toULongLong();
-    if(!clientModel->inInitialBlockDownload())
+    if ((!clientModel->inInitialBlockDownload()) && (!clientModel->getOptionsModel()->getHideNotification()))
     {
         // On new transaction, make an info balloon
         // Unless the initial block download is in progress, to prevent balloon-spam
@@ -691,8 +702,7 @@ void BitcoinGUI::incomingTransaction(const QModelIndex & parent, int start, int 
                         .data().toString();
         QIcon icon = qvariant_cast<QIcon>(ttm->index(start,
                             TransactionTableModel::ToAddress, parent)
-                        .data(Qt::DecorationRole));
-
+                        .data(Qt::DecorationRole));       
         notificator->notify(Notificator::Information,
                             (amount)<0 ? tr("Sent transaction") :
                                          tr("Incoming transaction"),
@@ -794,9 +804,17 @@ void BitcoinGUI::dropEvent(QDropEvent *event)
 
         // if valid URIs were found
         if (nValidUrisFound)
+        {
             gotoSendCoinsPage();
+        }
         else
-            notificator->notify(Notificator::Warning, tr("URI handling"), tr("URI can not be parsed! This can be caused by an invalid JackpotCoin address or malformed URI parameters."));
+        {
+            if (!clientModel->getOptionsModel()->getHideNotification())
+            {
+                notificator->notify(Notificator::Warning, tr("URI handling"),
+                                    tr("URI can not be parsed! This can be caused by an invalid JackpotCoin address or malformed URI parameters."));
+            }
+        }
     }
 
     event->acceptProposedAction();
@@ -811,7 +829,13 @@ void BitcoinGUI::handleURI(QString strURI)
         gotoSendCoinsPage();
     }
     else
-        notificator->notify(Notificator::Warning, tr("URI handling"), tr("URI can not be parsed! This can be caused by an invalid JackpotCoin address or malformed URI parameters."));
+    {
+        if (!clientModel->getOptionsModel()->getHideNotification())
+        {
+           notificator->notify(Notificator::Warning, tr("URI handling"),
+                               tr("URI can not be parsed! This can be caused by an invalid JackpotCoin address or malformed URI parameters."));
+        }
+    }
 }
 
 void BitcoinGUI::setEncryptionStatus(int status)
@@ -829,10 +853,14 @@ void BitcoinGUI::setEncryptionStatus(int status)
     case WalletModel::Unlocked:
         labelEncryptionIcon->show();
         labelEncryptionIcon->setPixmap(QIcon(":/icons/lock_open").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
-        if (fWalletUnlockMintOnly) 
+        if (fWalletUnlockMintOnly)
+        {
            labelEncryptionIcon->setToolTip(tr("Wallet is <b>encrypted</b> and currently <b>unlocked for minting</b>."));
-        else 
+        }
+        else
+        {
            labelEncryptionIcon->setToolTip(tr("Wallet is <b>encrypted</b> and currently <b>unlocked</b>."));
+        }
         encryptWalletAction->setChecked(true);
         encryptWalletAction->setEnabled(false); // TODO: decrypt currently not supported
         changePassphraseAction->setEnabled(true);
@@ -954,6 +982,7 @@ void BitcoinGUI::updateMintingIcon()
 
     if (nLastCoinStakeSearchInterval && nWeight)
     {
+
         uint64_t nNetworkWeight = GetPoSKernelPS();
         unsigned nEstimateTime = nStakeTargetSpacing * nNetworkWeight / nWeight;
 
@@ -975,24 +1004,36 @@ void BitcoinGUI::updateMintingIcon()
             text = tr("%n day(s)", "", nEstimateTime/(60*60*24));
         }
 
-        labelMintingIcon->setPixmap(QIcon(":/icons/minting_active").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
+        labelMintingIcon->setPixmap(QIcon(":/icons/minting_active").pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
         labelMintingIcon->setEnabled(true);
         labelMintingIcon->setToolTip(tr("Minting.<br>Your weight is %1<br>Network weight is %2<br>Expected time to earn reward is %3").arg(nWeight).arg(nNetworkWeight).arg(text));
+
     }
     else
     {
-        labelMintingIcon->setPixmap(QIcon(":/icons/minting_inactive").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
+        labelMintingIcon->setPixmap(QIcon(":/icons/minting_inactive").pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
         labelMintingIcon->setEnabled(false);
+
         if (pwalletMain && pwalletMain->IsLocked())
+        {
             labelMintingIcon->setToolTip(tr("Not minting because wallet is locked"));
+        }
         else if (vNodes.empty())
+        {
             labelMintingIcon->setToolTip(tr("Not minting because wallet is offline"));
+        }
         else if (IsInitialBlockDownload())
+        {
             labelMintingIcon->setToolTip(tr("Not minting because wallet is syncing"));
+        }
         else if (!nWeight)
+        {
             labelMintingIcon->setToolTip(tr("Not minting because you don't have mature coins"));
+        }
         else
+        {
             labelMintingIcon->setToolTip(tr("Not minting"));
+        }
     }
 }
 
@@ -1004,7 +1045,9 @@ void BitcoinGUI::updateMintingWeights()
         nWeight = 0;
 
         if (pwalletMain)
+        {
             pwalletMain->GetStakeWeight(*pwalletMain, nMinMax, nMinMax, nWeight);
+        }
 
         nNetworkWeight = GetPoSKernelPS();
     }

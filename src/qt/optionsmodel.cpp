@@ -42,14 +42,15 @@ void OptionsModel::Init()
 
     // These are Qt-only settings:
     nDisplayUnit = settings.value("nDisplayUnit", BitcoinUnits::BTC).toInt();
-    bDisplayAddresses = settings.value("bDisplayAddresses", false).toBool();
+    fDisplayAddresses = settings.value("fDisplayAddresses", false).toBool();
     fMinimizeToTray = settings.value("fMinimizeToTray", false).toBool();
     fMinimizeOnClose = settings.value("fMinimizeOnClose", false).toBool();
     fCoinControlFeatures = settings.value("fCoinControlFeatures", false).toBool();
     nTransactionFee = settings.value("nTransactionFee").toLongLong();
     nReserveBalance = settings.value("nReserveBalance").toLongLong();
     language = settings.value("language", "").toString();
-    fNotification = settings.value("fNotification", true).toBool();
+    fHideNotification = settings.value("fHideNotification", false).toBool();
+    fHideInvalid = settings.value("fHideInvalid", true).toBool();
 
     // These are shared with core Bitcoin; we want
     // command-line options to override the GUI settings:
@@ -89,7 +90,7 @@ bool OptionsModel::Upgrade()
         }
     }
     QList<QString> boolOptions;
-    boolOptions << "bDisplayAddresses" << "fMinimizeToTray" << "fMinimizeOnClose" << "fUseProxy" << "fUseUPnP";
+    boolOptions << "fDisplayAddresses" << "fMinimizeToTray" << "fMinimizeOnClose" << "fUseProxy" << "fUseUPnP" << "fHideNotification" << "fHideInvalid";
     foreach(QString key, boolOptions)
     {
         bool value = false;
@@ -170,15 +171,17 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
         case DisplayUnit:
             return QVariant(nDisplayUnit);
         case DisplayAddresses:
-            return QVariant(bDisplayAddresses);
+            return QVariant(fDisplayAddresses);
         case DetachDatabases:
             return QVariant(bitdb.GetDetach());
         case Language:
             return settings.value("language", "");
         case CoinControlFeatures:
             return QVariant(fCoinControlFeatures);
-		case Notification:
-            return QVariant(fNotification);
+        case HideNotification:
+            return QVariant(fHideNotification);
+        case HideInvalid:
+            return QVariant(fHideInvalid);
         default:
             return QVariant();
         }
@@ -214,18 +217,19 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             settings.setValue("fUseProxy", value.toBool());
             ApplyProxySettings();
             break;
-        case ProxyIP: {
+        case ProxyIP:
+            {
             proxyType proxy;
             proxy.first = CService("127.0.0.1", 9050);
             GetProxy(NET_IPV4, proxy);
-
             CNetAddr addr(value.toString().toStdString());
             proxy.first.SetIP(addr);
             settings.setValue("addrProxy", proxy.first.ToStringIPPort().c_str());
             successful = ApplyProxySettings();
-        }
-        break;
-        case ProxyPort: {
+            }
+            break;
+        case ProxyPort:
+            {
             proxyType proxy;
             proxy.first = CService("127.0.0.1", 9050);
             GetProxy(NET_IPV4, proxy);
@@ -233,9 +237,10 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             proxy.first.SetPort(value.toInt());
             settings.setValue("addrProxy", proxy.first.ToStringIPPort().c_str());
             successful = ApplyProxySettings();
-        }
-        break;
-        case ProxySocksVersion: {
+            }
+            break;
+        case ProxySocksVersion:
+            {
             proxyType proxy;
             proxy.second = 5;
             GetProxy(NET_IPV4, proxy);
@@ -243,8 +248,8 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             proxy.second = value.toInt();
             settings.setValue("nSocksVersion", proxy.second);
             successful = ApplyProxySettings();
-        }
-        break;
+            }
+            break;
         case Fee:
             nTransactionFee = value.toLongLong();
             settings.setValue("nTransactionFee", (qint64) nTransactionFee);
@@ -261,18 +266,21 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             emit displayUnitChanged(nDisplayUnit);
             break;
         case DisplayAddresses:
-            bDisplayAddresses = value.toBool();
-            settings.setValue("bDisplayAddresses", bDisplayAddresses);
+            fDisplayAddresses = value.toBool();
+            settings.setValue("fDisplayAddresses", fDisplayAddresses);
             break;
-        case DetachDatabases: {
-            bool fDetachDB = value.toBool();
-            bitdb.SetDetach(fDetachDB);
-            settings.setValue("detachDB", fDetachDB);
+        case DetachDatabases:
+            {
+            bool detachDB = value.toBool();
+            bitdb.SetDetach(detachDB);
+            settings.setValue("detachDB", detachDB);
             }
             break;
         case Language:
+            {
             settings.setValue("language", value);
             break;
+            }
         case CoinControlFeatures: 
             {
             fCoinControlFeatures = value.toBool();
@@ -280,11 +288,18 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             emit coinControlFeaturesChanged(fCoinControlFeatures);
             }
             break;
-        case Notification:
+        case HideNotification:
             {
-            fNotification = value.toBool();
-            settings.setValue("fNotification", fNotification);
+            fHideNotification = value.toBool();
+            settings.setValue("fHideNotification", fHideNotification);
             }
+            break;
+        case HideInvalid:
+            {
+            fHideInvalid = value.toBool();
+            settings.setValue("fHideInvalid", fHideInvalid);
+            }
+            break;
         default:
             break;
         }
@@ -326,10 +341,15 @@ int OptionsModel::getDisplayUnit()
 
 bool OptionsModel::getDisplayAddresses()
 {
-    return bDisplayAddresses;
+    return fDisplayAddresses;
 }
 
-bool OptionsModel::getNotification()
+bool OptionsModel::getHideNotification()
 {
-    return fNotification;
+    return fHideNotification;
+}
+
+bool OptionsModel::getHideInvalid()
+{
+    return fHideInvalid;
 }
