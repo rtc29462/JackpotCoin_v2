@@ -6,7 +6,6 @@
 = it has uploaded to share some code between developer, not for end user.
 = please, do not use this code. 
 =
-JackpotCoin (JACKPOT) 
 
 JackpotCoin is a PoW/PoS coin that is designed to be the unit of cybercoin.
 
@@ -22,7 +21,8 @@ Hybrid Dual Block Chain
    Stable Fast coin transaction with PoS Chain
 
    Most of TxFee and Interest will be paid to PoS miner, it is a fair way for the network
-   maintainers.
+   maintainers.JackpotCoin (JACKPOT) 
+
    
 
 
